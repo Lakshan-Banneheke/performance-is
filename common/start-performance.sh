@@ -267,7 +267,12 @@ sed -i "s/suffix/$random_number/" "$template_file_name"
 echo ""
 echo "Validating stack..."
 echo "============================================"
-aws cloudformation validate-template --template-body "file://$template_file_name"
+if ! aws cloudformation validate-template --template-body "file://$template_file_name" --output json > validation_output.json 2>&1; then
+    echo "Error: Template validation failed. Check validation_output.json for details."
+    cat validation_output.json
+    exit 1
+fi
+echo "Stack validation complete. Output saved to validation_output.json"
 
 # Save metadata
 test_parameters_json='.'
@@ -394,7 +399,7 @@ ssh_bastion_cmd "./workspace/jmeter/run-performance-tests.sh -p 443 ${run_perfor
 echo ""
 echo "Downloading results..."
 echo "============================================"
-download="scp -i $key_file -o "StrictHostKeyChecking=no" ubuntu@$bastion_node_ip:/home/ubuntu/results.zip $results_dir/"
+download="scp -i $key_file -o StrictHostKeyChecking=no ubuntu@$bastion_node_ip:/home/ubuntu/results.zip $results_dir/"
 echo "$download"
 $download || echo "Remote download failed"
 
