@@ -25,6 +25,7 @@ wso2is_1_host_alias=wso2is1
 wso2is_2_host_alias=wso2is2
 lb_ssh_host_alias=loadbalancer
 rds_ssh_host_alias=rds
+bastion_user="ubuntu"
 db_username="wso2carbon"
 db_password="wso2carbon"
 
@@ -38,7 +39,6 @@ declare -A test_scenario0=(
     [jmx]="authenticate/Authenticate_Super_Tenant_User.jmx"
     [tenantMode]=false
     [skip]=true
-    [modes]="FULL QUICK"
 )
 declare -A test_scenario1=(
     [name]="01-oauth_auth_code_redirect_with_consent"
@@ -47,7 +47,6 @@ declare -A test_scenario1=(
     [jmx]="oauth/OAuth_AuthCode_Redirect_WithConsent.jmx"
     [tenantMode]=false
     [skip]=true
-    [modes]="FULL"
 )
 declare -A test_scenario2=(
     [name]="02-oauth_implicit_redirect_with_consent"
@@ -56,7 +55,6 @@ declare -A test_scenario2=(
     [jmx]="oauth/OAuth_Implicit_Redirect_WithConsent.jmx"
     [tenantMode]=false
     [skip]=true
-    [modes]="FULL"
 )
 declare -A test_scenario3=(
     [name]="03-oauth_password_grant"
@@ -65,7 +63,6 @@ declare -A test_scenario3=(
     [jmx]="oauth/OAuth_Password_Grant.jmx"
     [tenantMode]=false
     [skip]=true
-    [modes]="FULL"
 )
 declare -A test_scenario4=(
     [name]="04-oauth_client_credential_grant"
@@ -74,7 +71,6 @@ declare -A test_scenario4=(
     [jmx]="oauth/OAuth_Client_Credentials_Grant.jmx"
     [tenantMode]=false
     [skip]=true
-    [modes]="FULL"
 )
 declare -A test_scenario5=(
     [name]="05-oidc_auth_code_redirect_with_consent"
@@ -83,7 +79,6 @@ declare -A test_scenario5=(
     [jmx]="oidc/OIDC_AuthCode_Redirect_WithConsent.jmx"
     [tenantMode]=false
     [skip]=true
-    [modes]="FULL QUICK"
 )
 declare -A test_scenario6=(
     [name]="06-oidc_implicit_redirect_with_consent"
@@ -92,7 +87,6 @@ declare -A test_scenario6=(
     [jmx]="oidc/OIDC_Implicit_Redirect_WithConsent.jmx"
     [tenantMode]=false
     [skip]=true
-    [modes]="FULL"
 )
 declare -A test_scenario7=(
     [name]="07-oidc_password_grant"
@@ -101,7 +95,6 @@ declare -A test_scenario7=(
     [jmx]="oidc/OIDC_Password_Grant.jmx"
     [tenantMode]=false
     [skip]=true
-    [modes]="FULL QUICK"
 )
 declare -A test_scenario8=(
     [name]="08-oidc_request_path_authenticator"
@@ -110,7 +103,6 @@ declare -A test_scenario8=(
     [jmx]="oidc/OIDC_AuthCode_Request_Path_Authenticator_WithConsent.jmx"
     [tenantMode]=false
     [skip]=true
-    [modes]="FULL"
 )
 declare -A test_scenario9=(
     [name]="09-saml2_sso_redirect_binding"
@@ -119,7 +111,6 @@ declare -A test_scenario9=(
     [jmx]="saml/SAML2_SSO_Redirect_Binding.jmx"
     [tenantMode]=false
     [skip]=true
-    [modes]="FULL QUICK"
 )
 declare -A test_scenario10=(
     [name]="10-oauth_auth_code_redirect_with_consent_tenant"
@@ -149,13 +140,13 @@ declare -A test_scenario12=(
     [modes]="FULL"
 )
 declare -A test_scenario13=(
-    [name]="04-oauth_client_credential_grant_tenant"
+    [name]="13-oauth_client_credential_grant_tenant"
     [display_name]="Client Credentials Grant Type"
     [description]="Obtain an access token using the OAuth 2.0 client credential grant type."
     [jmx]="oauth/OAuth_Client_Credentials_Grant.jmx"
     [tenantMode]=true
     [skip]=false
-    [modes]="FULL"
+    [modes]="FULL QUICK"
 )
 declare -A test_scenario14=(
     [name]="14-oidc_auth_code_redirect_with_consent_tenant"
@@ -164,7 +155,7 @@ declare -A test_scenario14=(
     [jmx]="oidc/OIDC_AuthCode_Redirect_WithConsent.jmx"
     [tenantMode]=true
     [skip]=false
-    [modes]="FULL"
+    [modes]="FULL QUICK"
 )
 declare -A test_scenario15=(
     [name]="15-oidc_implicit_redirect_with_consent_tenant"
@@ -182,7 +173,7 @@ declare -A test_scenario16=(
     [jmx]="oidc/OIDC_Password_Grant.jmx"
     [tenantMode]=true
     [skip]=false
-    [modes]="FULL"
+    [modes]="FULL QUICK"
 )
 declare -A test_scenario17=(
     [name]="17-oidc_request_path_authenticator_tenant"
@@ -200,7 +191,7 @@ declare -A test_scenario18=(
     [jmx]="saml/SAML2_SSO_Redirect_Binding.jmx"
     [tenantMode]=true
     [skip]=false
-    [modes]="FULL"
+    [modes]="FULL QUICK"
 )
 
 function before_execute_test_scenario() {
@@ -208,12 +199,34 @@ function before_execute_test_scenario() {
     jmeter_params+=("port=443")
 
     echo "Cleaning databases..."
+
     if [ "$databaseType" == "mysql" ] ; then
       echo "Database Type MySQL."
-      mysql -u $db_username -h "$rds_host" $databaseName -p$db_password < /home/ubuntu/workspace/is/mysql/clean_database.sql
+      mysql -u $db_username -h "$rds_host" $databaseName -p$db_password < /home/$bastion_user/workspace/is/clean-database.sql
     else
       echo "Database Type MSSQL."
-      sqlcmd -S "$rds_host" -U $db_username -P $db_password -d $databaseName -i /home/ubuntu/workspace/is/mssql/clean_database.sql
+      echo "sqlcmd -S \"$rds_host\" -U $db_username -P$db_password -d $databaseName -i /home/$bastion_user/workspace/is/truncate_non_empty_table.sql" > truncate.sh
+      pwsh -File "truncate.sh"
+      echo "sqlcmd -S \"$rds_host\" -U $db_username -P$db_password -d $databaseName -i /home/$bastion_user/workspace/is/clean-database-mssql.sql" > cleandb.sh
+      pwsh -File "cleandb.sh"
+    fi
+}
+
+function after_execute_test_scenario() {
+
+    echo "Get Database Metrics..."
+    if [ "$databaseType" == "mssql" ] ; then
+      echo "Database Type MSSQL."
+      echo "sqlcmd -S \"$rds_host\" -U $db_username -P$db_password -d $databaseName -i /home/$bastion_user/workspace/is/avg-execution.sql" > avg-execution.sh
+      pwsh -File "avg-execution.sh" > "$report_location"/avg-execution.txt
+      echo "sqlcmd -S \"$rds_host\" -U $db_username -P$db_password -d $databaseName -i /home/$bastion_user/workspace/is/cpu-time.sql" > cpu-time.sh
+      pwsh -File "cpu-time.sh" > "$report_location"/cpu-time.txt
+      echo "sqlcmd -S \"$rds_host\" -U $db_username -P$db_password -d $databaseName -i /home/$bastion_user/workspace/is/query-execution-count.sql" > query-execution-count.sh
+      pwsh -File "query-execution-count.sh" > "$report_location"/query-execution-count.txt
+      echo "sqlcmd -S \"$rds_host\" -U $db_username -P$db_password -d $sessionDatabaseName -i /home/$bastion_user/workspace/is/truncate_non_empty_table.sql" > truncate.sh
+      pwsh -File "truncate.sh"
+      echo "sqlcmd -S \"$rds_host\" -U $db_username -P$db_password -d $sessionDatabaseName -i /home/$bastion_user/workspace/is/clean-session-database-mssql.sql" > cleandb.sh
+      pwsh -File "cleandb.sh"
     fi
 }
 

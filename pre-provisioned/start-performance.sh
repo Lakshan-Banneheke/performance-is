@@ -28,8 +28,7 @@ random_number=$RANDOM
 # random_number=21265
 
 stack_name="performance-pre-provisioned--$timestamp--$random_number"
-
-key_file="/home/ubuntu/key.pem"
+bastion_user="ubuntu"
 rds_host=""
 certificate_name=""
 jmeter_setup=""
@@ -56,7 +55,7 @@ minimum_stack_creation_wait_time="$default_minimum_stack_creation_wait_time"
 function usage() {
     echo ""
     echo "Usage: "
-    echo "$0 -k <key_file> -c <certificate_name> -j <jmeter_setup_path> -n <IS_zip_file_path>"
+    echo "$0  -c <certificate_name> -j <jmeter_setup_path> -n <IS_zip_file_path>"
     echo "   [-u <db_username>] [-p <db_password>] [-d <db_storage>] [-e <db_instance_type>]"
     echo "   [-i <wso2_is_instance_type>] [-b <bastion_instance_type>]"
     echo "   [-w <minimum_stack_creation_wait_time>] [-h]"
@@ -76,7 +75,7 @@ function usage() {
     echo ""
 }
 
-while getopts "j:u:p:n:p:i:b:k:t:d:h" opts; do
+while getopts "j:u:p:n:p:i:b:t:d:h" opts; do
     case $opts in
     j)
         jmeter_setup=${OPTARG}
@@ -96,9 +95,6 @@ while getopts "j:u:p:n:p:i:b:k:t:d:h" opts; do
     n)
         rds_host=${OPTARG}
         ;;
-    k)
-        key_file=${OPTARG}
-        ;;
     t)
         mode=${OPTARG}
         ;;
@@ -115,11 +111,12 @@ done
 shift "$((OPTIND - 1))"
 
 echo $rds_host
+echo "Installed Python Version:" 
+python --version
 echo "Run mode: $mode"
 
 run_performance_tests_options="$@"
-
-run_performance_tests_options+=(" -l $cloud_host_name -n $rds_host -r $db_username -s $db_password -v $mode")
+echo $run_performance_tests_options
 
 if [[ -z $db_username ]]; then
     echo "Please provide the database username."
@@ -141,17 +138,20 @@ if [[ -z $bastion_instance_type ]]; then
     exit 1
 fi
 
-if [[ -z $key_file ]]; then
-    echo "Please provide the key file."
-    exit 1
+if [[ ! -z $servicePrincipalId ]]; then
+    bastion_user=$servicePrincipalId
 fi
+export bastion_user
+
+run_performance_tests_options+=(" -l $cloud_host_name -n $rds_host -r $db_username -s $db_password -v $mode -o $bastion_user")
+echo $run_performance_tests_options
 
 # Checking for the availability of commands in jenkins.
 check_command bc
-check_command aws
 check_command unzip
 check_command jq
 check_command python
+check_command terraform
 
 mkdir "$results_dir"
 echo ""
@@ -170,64 +170,19 @@ $estimate_command
 
 temp_dir=$(mktemp -d)
 
-export AWS_DEFAULT_OUTPUT="json"
+# Replaces CustomScript variable value with current bastion_user (to be passed on to setup-script.sh)
+sed -i -e "s/{bastion_user}/$bastion_user/g" bastion-terraform.tf
 
+echo 'Cloud Provider is Azure.'
 echo ""
-echo "Preparing cloud formation template..."
-echo "============================================"
-echo "random_number: $random_number"
-cp bastion-cft.yml new-bastion-cft.yml
-sed -i "s/suffix/$random_number/" new-bastion-cft.yml
+terraform init
+echo "Terraform Apply.."
+terraform apply -auto-approve
+echo "Getting Bastion Node Private IP..."
+bastion_node_ip=$(terraform output private_ip_address | tr -d '"')
+echo "Bastion Node Private IP: $bastion_node_ip"
+az ssh config --file ~/.ssh/config --ip $bastion_node_ip
 
-echo ""
-echo "Validating stack..."
-echo "============================================"
-aws cloudformation validate-template --template-body file://new-bastion-cft.yml
-
-# Save metadata
-test_parameters_json='.'
-test_parameters_json+=' | .["is_nodes_ec2_instance_type"]=$is_nodes_ec2_instance_type'
-test_parameters_json+=' | .["bastion_node_ec2_instance_type"]=$bastion_node_ec2_instance_type'
-jq -n \
-    --arg is_nodes_ec2_instance_type "$wso2_is_instance_type" \
-    --arg bastion_node_ec2_instance_type "$bastion_instance_type" \
-    "$test_parameters_json" > "$results_dir"/cf-test-metadata.json
-
-stack_create_start_time=$(date +%s)
-create_stack_command="aws cloudformation create-stack --stack-name $stack_name \
-    --template-body file://new-bastion-cft.yml --parameters \
-        ParameterKey=KeyPairName,ParameterValue=iam-cloud-load-test \
-        ParameterKey=BastionInstanceType,ParameterValue=$bastion_instance_type \
-    --capabilities CAPABILITY_IAM"
-
-echo ""
-echo "Creating stack..."
-echo "============================================"
-echo "$create_stack_command"
-stack_id="$($create_stack_command)"
-stack_id=$(echo "$stack_id"|jq -r .StackId)
-
-# Delete the stack in case of an error.
-trap 'exit_handler "$results_dir" "$stack_id" "$script_start_time"' EXIT
-
-echo ""
-echo "Created stack ID: $stack_id"
-rm new-bastion-cft.yml
-
-echo ""
-echo "Waiting ${minimum_stack_creation_wait_time}m before polling for cloudformation stack's CREATE_COMPLETE status..."
-sleep "${minimum_stack_creation_wait_time}"m
-
-echo ""
-echo "Polling till the stack creation completes..."
-aws cloudformation wait stack-create-complete --stack-name "$stack_id"
-printf "Stack creation time: %s\n" "$(format_time "$(measure_time "$stack_create_start_time")")"
-
-echo ""
-echo "Getting Bastion Node Public IP..."
-bastion_instance="$(aws cloudformation describe-stack-resources --stack-name "$stack_id" --logical-resource-id WSO2BastionInstance"$random_number" | jq -r '.StackResources[].PhysicalResourceId')"
-bastion_node_ip="$(aws ec2 describe-instances --instance-ids "$bastion_instance" | jq -r '.Reservations[].Instances[].PublicIpAddress')"
-echo "Bastion Node Public IP: $bastion_node_ip"
 
 
 if [[ -z $bastion_node_ip ]]; then
@@ -238,32 +193,27 @@ fi
 echo ""
 echo "Copying files to Bastion node..."
 echo "============================================"
-copy_setup_files_command="scp -r -i $key_file -o "StrictHostKeyChecking=no" $results_dir/setup ubuntu@$bastion_node_ip:/home/ubuntu/"
-copy_repo_setup_command="scp -i $key_file -o "StrictHostKeyChecking=no" target/is-performance-pre-provisioned-*.tar.gz \
-    ubuntu@$bastion_node_ip:/home/ubuntu"
+copy_setup_files_command="scp -v -r -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $results_dir/setup $bastion_user@$bastion_node_ip:/home/$bastion_user/"
+copy_repo_setup_command="scp -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com target/is-performance-pre-provisioned-*.tar.gz \
+    $bastion_user@$bastion_node_ip:/home/$bastion_user/"
 
 echo "$copy_setup_files_command"
 $copy_setup_files_command
 echo "$copy_repo_setup_command"
 $copy_repo_setup_command
 
-copy_jmeter_setup_command="scp -i $key_file -o StrictHostKeyChecking=no $jmeter_setup ubuntu@$bastion_node_ip:/home/ubuntu/"
-copy_is_pack_command="scp -i $key_file -o "StrictHostKeyChecking=no" $is_setup ubuntu@$bastion_node_ip:/home/ubuntu/wso2is.zip"
-copy_key_file_command="scp -i $key_file -o "StrictHostKeyChecking=no" $key_file ubuntu@$bastion_node_ip:/home/ubuntu/private_key.pem"
-copy_connector_command="scp -r -i $key_file -o "StrictHostKeyChecking=no" $results_dir/lib/* ubuntu@$bastion_node_ip:/home/ubuntu/"
+copy_jmeter_setup_command="scp -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $jmeter_setup $bastion_user@$bastion_node_ip:/home/$bastion_user/"
+copy_is_pack_command="scp -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $is_setup $bastion_user@$bastion_node_ip:/home/$bastion_user/wso2is.zip"
+copy_connector_command="scp -r -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $results_dir/lib/* $bastion_user@$bastion_node_ip:/home/$bastion_user/"
 
 echo "$copy_jmeter_setup_command"
 $copy_jmeter_setup_command
-echo "$copy_key_file_command"
-$copy_key_file_command
-echo "$copy_connector_command"
-$copy_connector_command
 
 echo ""
 echo "Running Bastion Node setup script..."
 echo "============================================"
-setup_bastion_node_command="ssh -i $key_file -o "StrictHostKeyChecking=no" -t ubuntu@$bastion_node_ip \
-    sudo ./setup/setup-bastion.sh -r $rds_host -l $cloud_host_name"
+setup_bastion_node_command="ssh -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com -t  $bastion_user@$bastion_node_ip \
+    sudo ./setup/setup-bastion.sh -r $rds_host -l $cloud_host_name -u $bastion_user"
 echo "$setup_bastion_node_command"
 # Handle any error and let the script continue.
 $setup_bastion_node_command || echo "Remote ssh command failed."
@@ -272,16 +222,22 @@ $setup_bastion_node_command || echo "Remote ssh command failed."
 echo ""
 echo "Running performance tests..."
 echo "============================================"
-scp -i "$key_file" -o StrictHostKeyChecking=no run-performance-tests.sh ubuntu@"$bastion_node_ip":/home/ubuntu/workspace/jmeter
+scp -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com run-performance-tests.sh $bastion_user@$bastion_node_ip:/home/$bastion_user/workspace/jmeter
+echo "Run Type: $mode"
+
 run_performance_tests_command="./workspace/jmeter/run-performance-tests.sh -p 443 ${run_performance_tests_options[@]}"
-run_remote_tests="ssh -i $key_file -o "StrictHostKeyChecking=no" -t ubuntu@$bastion_node_ip $run_performance_tests_command"
+
+run_remote_tests="ssh -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com -t  $bastion_user@$bastion_node_ip $run_performance_tests_command"
 echo "$run_remote_tests"
 $run_remote_tests || echo "Remote test ssh command failed."
 
 echo ""
 echo "Downloading results..."
 echo "============================================"
-download="scp -i $key_file -o "StrictHostKeyChecking=no" ubuntu@$bastion_node_ip:/home/ubuntu/results.zip $results_dir/"
+echo "Overwrite the ssh config file"
+yes y | az ssh config --file ~/.ssh/config --ip $bastion_node_ip --overwrite
+echo "============================================"
+download="scp -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $bastion_user@$bastion_node_ip:/home/$bastion_user/results.zip $results_dir/"
 echo "$download"
 $download || echo "Remote download failed"
 
@@ -291,19 +247,23 @@ if [[ ! -f $results_dir/results.zip ]]; then
     exit 0
 fi
 
+echo "Installing required Python packages..."
+# sudo apt install -y python-pip
+pip install numpy
+echo "============================================"
+
 echo ""
 echo "Creating summary.csv..."
 echo "============================================"
 cd "$results_dir"
+
 unzip -q results.zip
-wget -q http://sourceforge.net/projects/gcviewer/files/gcviewer-1.35.jar/download -O gcviewer.jar
+wget https://sourceforge.net/projects/gcviewer/files/gcviewer-1.35.jar/download -O gcviewer.jar
 "$results_dir"/jmeter/create-summary-csv.sh -d results -n "WSO2 Identity Server" -p wso2is -c "Heap Size" \
     -c "Concurrent Users" -r "([0-9]+[a-zA-Z])_heap" -r "([0-9]+)_users" -i -l -k 2 -g gcviewer.jar
-
-echo "Creating summary results markdown file..."
+echo "Creating summary file..."
 ./summary/summary-modifier.py
-./jmeter/create-summary-markdown.py --json-files cf-test-metadata.json results/test-metadata.json --column-names \
-    "Concurrent Users" "95th Percentile of Response Time (ms)"
+
 
 rm -rf cf-test-metadata.json cloudformation/ common/ gcviewer.jar is/ jmeter/ jtl-splitter/ netty-service/ payloads/ results/ sar/ setup/
 

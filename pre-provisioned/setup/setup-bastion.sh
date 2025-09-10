@@ -22,6 +22,7 @@
 lb_host=""
 rds_host=""
 lb_alias=loadbalancer
+bastion_user=""
 
 function usage() {
     echo ""
@@ -34,13 +35,16 @@ function usage() {
     echo ""
 }
 
-while getopts "l:r:h" opts; do
+while getopts "l:r:u:h" opts; do
     case $opts in
     l)
         lb_host=${OPTARG}
         ;;
     r)
         rds_host=${OPTARG}
+        ;;
+    u)
+        bastion_user=${OPTARG}
         ;;
     h)
         usage
@@ -53,6 +57,8 @@ while getopts "l:r:h" opts; do
     esac
 done
 
+echo "bastion_user: $bastion_user"
+
 if [[ -z $lb_host ]]; then
     echo "Please provide the private hostname of Load balancer instance."
     exit 1
@@ -64,33 +70,36 @@ if [[ -z $rds_host ]]; then
 fi
 
 function get_ssh_hostname() {
-    sudo -u ubuntu ssh -G "$1" | awk '/^hostname / { print $2 }'
+    sudo -u $bastion_user ssh -G "$1" | awk '/^hostname / { print $2 }'
 }
 
 echo ""
 echo "Setting up required files..."
 echo "============================================"
-cd /home/ubuntu || exit 0
+cd /home/$bastion_user || exit 0
 mkdir workspace
 cd workspace || exit 0
 
 echo ""
 echo "Extracting cloud performance distribution..."
 echo "============================================"
-tar -C /home/ubuntu/workspace -xzf /home/ubuntu/is-performance-pre-provisioned-*.tar.gz
+tar -C /home/$bastion_user/workspace -xzf /home/$bastion_user/is-performance-pre-provisioned-*.tar.gz
 
 echo ""
 echo "Running JMeter setup script..."
 echo "============================================"
-cd /home/ubuntu || exit 0
-workspace/setup/setup-jmeter-client-is.sh -g -k /home/ubuntu/private_key.pem \
-            -i /home/ubuntu \
-            -c /home/ubuntu \
-            -f /home/ubuntu/apache-jmeter-*.tgz \
+cd /home/$bastion_user || exit 0
+# Creates a temporary empty key
+touch temp.pem
+workspace/setup/setup-jmeter-client-is.sh -g -k ./temp.pem \
+            -i /home/$bastion_user \
+            -c /home/$bastion_user \
+            -f /home/$bastion_user/apache-jmeter-*.tgz \
             -a $lb_alias -n "$lb_host"\
             -a rds -n "$rds_host"
-sudo chown -R ubuntu:ubuntu workspace
-sudo chown -R ubuntu:ubuntu apache-jmeter-*
-sudo chown -R ubuntu:ubuntu /tmp/jmeter.log
-sudo chown -R ubuntu:ubuntu jmeter.log
-
+sudo chown -R $bastion_user:$bastion_user workspace
+sudo chown -R $bastion_user:$bastion_user apache-jmeter-*
+sudo chown -R $bastion_user:$bastion_user /tmp/jmeter.log
+sudo chown -R $bastion_user:$bastion_user jmeter.log
+echo "setup-bastion:104:"
+ls /tmp/
