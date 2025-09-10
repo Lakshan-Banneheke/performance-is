@@ -1,77 +1,30 @@
 {
     "resourceGroupName": {
-        "value": "rg-asgardeo-performance-test-perf-eastus2-001"
+        "value": "thunder"
     },
     "location": {
         "value": "eastus2"
     },
     "networkInterfaceName": {
-        "value": "asgardeo-perf-test-network-interface"
-    },
-    "networkSecurityGroupName": {
-        "value": "asgardeo-perf-test-nsg"
-    },
-    "networkSecurityGroupRules": {
-        "value": [
-            {
-                "name": "SSH",
-                "properties": {
-                    "priority": 300,
-                    "protocol": "TCP",
-                    "access": "Allow",
-                    "direction": "Inbound",
-                    "sourceAddressPrefix": "*",
-                    "sourcePortRange": "*",
-                    "destinationAddressPrefix": "*",
-                    "destinationPortRange": "22"
-                }
-            }
-        ]
-    },
-    "subnetName": {
-        "value": "default"
-    },
-    "virtualNetworkName": {
-        "value": "asgardeo-perf-test-vnet"
-    },
-    "addressPrefixes": {
-        "value": [
-            "10.0.0.0/16"
-        ]
-    },
-    "subnets": {
-        "value": [
-            {
-                "name": "default",
-                "properties": {
-                    "addressPrefix": "10.0.0.0/24"
-                }
-            }
-        ]
+        "value": "thunder-perf-test-vm-network-interface"
     },
     "publicIpAddressName": {
-        "value": "asgardeo-perf-test-ip"
-    },
-    "publicIpAddressType": {
-        "value": "Static"
+        "value": "thunder-perf-test-vm-ip"
     },
     "publicIpAddressSku": {
         "value": "Standard"
     },
     "virtualMachineName": {
-        "value": "asgardeo-perf-test-vm"
+        "value": "thunder-perf-test-vm"
     },
     "virtualMachineComputerName": {
-        "value": "asgardeo-perf-test-vm"
-    },
-    "virtualMachineRG": {
-        "value": "rg-asgardeo-performance-test-perf-eastus2-001"
+        "value": "thunder-perf-test-vm"
     },
     "osDiskType": {
         "value": "Standard_LRS"
     },
     "virtualMachineSize": {
-        "value": "Standard_F16s_v2"
+        "value": "Standard_F8s_v2"
     },
     "adminUsername": {
         "value": "ubuntu"

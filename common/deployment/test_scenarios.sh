@@ -24,5 +24,5 @@ declare -A test_scenario0=(
     [jmx]="oauth/Thunder_OAuth_Client_Credentials_Grant.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL PUBLISH"
+    [modes]="QUICK FULL PUBLISH"
 )

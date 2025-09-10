@@ -1,7 +1,7 @@
 #!/bin/bash +x
-# Copyright (c) 2022, wso2 Inc. (http://wso2.org) All Rights Reserved.
+# Copyright (c) 2025, WSO2 LLC. (https://www.wso2.com).
 #
-# wso2 Inc. licenses this file to you under the Apache License,
+# WSO2 LLC. licenses this file to you under the Apache License,
 # Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,7 +11,7 @@
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
+# KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations
 # under the License.
 #
@@ -19,19 +19,19 @@
 # Run Identity Server Performance tests for two node cluster deployment.
 # ----------------------------------------------------------------------------
 
-BUILD_JOB_NAME="performance-is-pre-provisioned-wso2.com"
+BUILD_JOB_NAME="thunder-performance-is-pre-provisioned-wso2.com"
 
 # Create workspace. 
-BUILD_DIR=`pwd`
+BUILD_DIR=$(pwd)
 RESOURCES_DIR=$BUILD_DIR/resources
-WORKSPACE=$BUILD_DIR/asgardeo-performance-artifacts
+WORKSPACE=$BUILD_DIR/performance-is
 cd $BUILD_DIR
 mkdir resources
 dig +short myip.opendns.com @resolver1.opendns.com
 echo "Build Dir:$BUILD_DIR | Resources_Dir: $RESOURCES_DIR | Workspace: $WORKSPACE"
 cmd=""
 MODE=$RUN_MODE
-DATABASE_TYPE="mssql"
+DATABASE_TYPE="postgres"
 
 git config --global user.email "$GITHUB_USER_EMAIL"
 git config --global user.name "$GITHUB_USERNAME"
@@ -40,16 +40,16 @@ echo "$BUILD_TYPE"
 
 echo ""
 echo "Starting performance test with params:"
-echo "    IS_PACK_URL: $IS_PACK_URL"
+echo "    THUNDER_PACK_URL: $THUNDER_PACK_URL"
 echo "    DEPLOYMENT: $DEPLOYMENT"
 echo "    CPU_CORES: $CPU_CORES"
 echo "    MODE: $MODE"
 echo "    PURPOSE: $BUILD_PURPOSE"
 echo "=========================================================="
-echo "Perf-status: "
-curl -s -i https://perf.api.asgardeo.io/api/health-check/v1.0/health | head -1
+echo "Thunder Perf Environment - Status: "
+curl -s -i https://thunder.local/health/liveness | head -1
 
-echo "Changing Directory to Asgardeo Product Repository | Branch: $BRANCH"
+echo "Changing Directory to Thunder Product Repository | Branch: $BRANCH"
 cd $WORKSPACE
 
 rm -rf ~/.ssh/
@@ -85,7 +85,7 @@ echo "Starting test..."
 echo "=========================================================="
   
 # Define and execute start-performance command.
-cmd="./start-performance.sh -j $RESOURCES_DIR/apache-jmeter-3.3.tgz -u $DATABASE_USER_NAME -p $DATABASE_PASSWORD -n $DATABASE_HOST_NAME -d $IS_HOST_NAME -t $MODE -- -d 15 -w 2 -u $PERFORMANCE_TEST_USER_NAME -k $PERFORMANCE_TEST_USER_PASSWORD -q $POPULATE_TEST_DATA -f $DATABASE_NAME -b $DATABASE_TYPE -g $SESSION_DATABASE_NAME -x $TENANTS -y $SP_PER_TENANT -z $USERS_PER_TENANT -c $CONCURRENT_USERS"
+cmd="./start-performance.sh -j $RESOURCES_DIR/apache-jmeter-3.3.tgz -u $DATABASE_USER_NAME -p $DATABASE_PASSWORD -n $DATABASE_HOST_NAME -d $THUNDER_HOST_NAME -t $MODE -- -d 15 -w 2 -u $PERFORMANCE_TEST_USER_NAME -k $PERFORMANCE_TEST_USER_PASSWORD -q $POPULATE_TEST_DATA -f $DATABASE_NAME -b $DATABASE_TYPE -g $SESSION_DATABASE_NAME -x $TENANTS -y $SP_PER_TENANT -z $USERS_PER_TENANT -c $CONCURRENT_USERS"
 
 $cmd
 

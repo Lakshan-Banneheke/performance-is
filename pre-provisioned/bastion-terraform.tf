@@ -12,10 +12,10 @@
 locals {
   json_data = jsondecode(file("parameters.json"))
   default_tags = {
-    project     = "asgardeo"
-    environment = "perf"
+    project     = "thunder"
+    environment = "rnd"
     terraform   = "true"
-    usecase     = "performance-testing-vm"
+    usecase     = "thunder-performance-testing-vm"
   }
 }
 
@@ -38,7 +38,7 @@ provider "azurerm" {
 }
 
 # Create public IPs
-resource "azurerm_public_ip" "performance-testing_public_ip" {
+resource "azurerm_public_ip" "performance_testing_public_ip" {
   name                         = local.json_data.publicIpAddressName.value
   location                     = local.json_data.location.value
   resource_group_name          = local.json_data.resourceGroupName.value
@@ -46,34 +46,24 @@ resource "azurerm_public_ip" "performance-testing_public_ip" {
   sku = local.json_data.publicIpAddressSku.value
   availability_zone = local.json_data.zone.value
 
-  tags = {
-    project     = "asgardeo"
-    environment = "perf"
-    terraform   = "true"
-    usecase     = "performance-testing-vm"
-  }
+  tags = local.default_tags
 }
 
 # Create network interface
-resource "azurerm_network_interface" "performance-testing_nic" {
+resource "azurerm_network_interface" "performance_testing_nic" {
   name                      = local.json_data.networkInterfaceName.value
   location                  = local.json_data.location.value
   resource_group_name       = local.json_data.resourceGroupName.value
-  depends_on                = [azurerm_public_ip.performance-testing_public_ip]
+  depends_on                = [azurerm_public_ip.performance_testing_public_ip]
 
   ip_configuration {
     name                          = "ipconfig1"
-    subnet_id                     = "/subscriptions/{SUBSCRIPTION_ID}/resourceGroups/rg-asgardeo-main-perf-eastus2-001/providers/Microsoft.Network/virtualNetworks/vnet-asgardeo-main-perf-eastus2-001/subnets/snet-bastion-001"
+    subnet_id                     = "/subscriptions/{SUBSCRIPTION_ID}/resourceGroups/thunder/providers/Microsoft.Network/virtualNetworks/thunder-vnet/subnets/default"
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.performance-testing_public_ip.id
+    public_ip_address_id          = azurerm_public_ip.performance_testing_public_ip.id
   }
 
-  tags = {
-    project     = "asgardeo"
-    environment = "perf"
-    terraform   = "true"
-    usecase     = "performance-testing-vm"
-  }
+  tags = local.default_tags
 }
 
 resource "azurerm_linux_virtual_machine" "performance_testing_linux_vm" {
@@ -81,8 +71,8 @@ resource "azurerm_linux_virtual_machine" "performance_testing_linux_vm" {
   resource_group_name = local.json_data.resourceGroupName.value
   location            = local.json_data.location.value
   size                = local.json_data.virtualMachineSize.value
-  depends_on = [azurerm_network_interface.performance-testing_nic]
-  network_interface_ids = [azurerm_network_interface.performance-testing_nic.id]
+  depends_on = [azurerm_network_interface.performance_testing_nic]
+  network_interface_ids = [azurerm_network_interface.performance_testing_nic.id]
   computer_name = local.json_data.virtualMachineComputerName.value
   admin_username      = local.json_data.adminUsername.value
 
@@ -105,18 +95,13 @@ resource "azurerm_linux_virtual_machine" "performance_testing_linux_vm" {
   source_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
+    sku       = "24.04-LTS"
     version   = "latest"
   }
 
   zone = local.json_data.zone.value
 
-  tags = {
-    project     = "asgardeo"
-    environment = "perf"
-    terraform   = "true"
-    usecase     = "performance-testing-vm"
-  }
+  tags = local.default_tags
 }
 
 resource "azurerm_virtual_machine_extension" "aad_ssh_login" {
@@ -144,9 +129,9 @@ SETTINGS
 }
 
 output "public_ip_address" {
-  value = azurerm_public_ip.performance-testing_public_ip.ip_address
+  value = azurerm_public_ip.performance_testing_public_ip.ip_address
 }
 
 output "private_ip_address" {
-  value = azurerm_network_interface.performance-testing_nic.private_ip_address
+  value = azurerm_network_interface.performance_testing_nic.private_ip_address
 }
