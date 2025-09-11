@@ -57,16 +57,16 @@
 default_concurrent_users="100 300 500"
 quick_mode_concurrent_users="200"
 # Application heap Sizes
-default_heap_sizes="2G"
+default_heap_sizes="4G"
 
 # Test Duration in minutes
-default_test_duration=60
+default_test_duration=15
 test_duration=$default_test_duration
 # Warm-up time in minutes
 default_warm_up_time=5
 warm_up_time=$default_warm_up_time
 # Heap size of JMeter Client
-default_jmeter_client_heap_size=2G
+default_jmeter_client_heap_size=4G
 jmeter_client_heap_size=$default_jmeter_client_heap_size
 
 # Scenario names to include
@@ -80,7 +80,7 @@ estimate=false
 default_estimated_processing_time_in_between_tests=220
 estimated_processing_time_in_between_tests=$default_estimated_processing_time_in_between_tests
 
-default_is_port=9443
+default_is_port=8090
 is_port=$default_is_port
 
 # Start time of the test
@@ -90,13 +90,7 @@ declare -A scenario_counter
 # Scenario specific durations
 declare -A scenario_duration
 
-superAdminUsername="admin"
-superAdminPassword="admin"
 populateTestData=true
-rds_host=""
-databaseType="mysql"
-databaseName="IDENTITY_DB"
-sessionDatabaseName="SESSION_DB"
 noOfTenants=100
 spCount=10
 userCount=1000
@@ -122,13 +116,8 @@ function usage() {
     echo "-j: Heap Size of JMeter Client. Default $default_jmeter_client_heap_size."
     echo "-i: Scenario name to to be included. You can give multiple options to filter scenarios."
     echo "-e: Scenario name to to be excluded. You can give multiple options to filter scenarios."
-    echo "-u: Super admin user name."
-    echo "-k: Super admin password."
     echo "-l: Host name."
-    echo "-n: RDS Host name."
     echo "-q: Populate test data. Default true."
-    echo "-b: Database Type. Default mysql."
-    echo "-f: Database name. Default IDENTITY_DB."
     echo "-t: Estimate time without executing tests."
     echo "-p: Identity Server Port. Default $default_is_port."
     echo "-v: Specify testing mode [FULL/QUICK]"
@@ -136,13 +125,10 @@ function usage() {
     echo ""
 }
 
-while getopts "c:g:m:d:w:j:i:e:x:y:z:t:p:u:k:l:n:r:s:q:b:f:v:o:h" opts; do
+while getopts "c:m:d:w:j:i:e:x:y:z:t:p:l:q:v:h" opts; do
     case $opts in
     c)
         concurrent_users+=("${OPTARG}")
-        ;;
-    g)
-        sessionDatabaseName=${OPTARG}
         ;;
     m)
         heap_sizes+=("${OPTARG}")
@@ -177,38 +163,14 @@ while getopts "c:g:m:d:w:j:i:e:x:y:z:t:p:u:k:l:n:r:s:q:b:f:v:o:h" opts; do
     p)
         is_port=${OPTARG}
         ;;
-    u)
-        superAdminUsername=${OPTARG}
-        ;;
-    k)
-        superAdminPassword=${OPTARG}
-        ;;
     l)
         lb_host=${OPTARG}
-        ;;
-    n)
-        rds_host=${OPTARG}
-        ;;
-    r)
-        db_username=${OPTARG}
-        ;;
-    s)
-        db_password=${OPTARG}
         ;;
     q)
         populateTestData=${OPTARG}
         ;;
-    b)
-        databaseType=${OPTARG}
-        ;;
-    f)
-        databaseName=${OPTARG}
-        ;;
     v)
         mode=${OPTARG}
-        ;;
-    o)
-        bastion_user=${OPTARG}
         ;;
     h)
         usage
@@ -258,30 +220,30 @@ fi
 
 declare -ag heap_sizes_array
 if [ ${#heap_sizes[@]} -eq 0 ]; then
-    heap_sizes_array=( $default_heap_sizes )
+    heap_sizes_array=( "$default_heap_sizes" )
 else
-    heap_sizes_array=( ${heap_sizes[@]} )
+    heap_sizes_array=( "${heap_sizes[@]}" )
 fi
 
 declare -ag concurrent_users_array
 if [ ${#concurrent_users[@]} -eq 0 ]; then
     if [ "$mode" == "QUICK" ]; then
-        concurrent_users_array=( $quick_mode_concurrent_users )
+        concurrent_users_array=( "$quick_mode_concurrent_users" )
     else
-        concurrent_users_array=( $default_concurrent_users )
+        concurrent_users_array=( "$default_concurrent_users" )
     fi
 else
-    concurrent_users_array=( ${concurrent_users[@]} )
+    concurrent_users_array=( "${concurrent_users[@]}" )
 fi
 
-for heap in ${heap_sizes_array[@]}; do
+for heap in "${heap_sizes_array[@]}"; do
     if ! [[ $heap =~ $heap_regex ]]; then
         echo "Please specify a valid heap size for the application."
         exit 1
     fi
 done
 
-for users in ${concurrent_users_array[@]}; do
+for users in "${concurrent_users_array[@]}"; do
     if ! [[ $users =~ $number_regex ]]; then
         echo "Please specify a valid number for concurrent users."
         exit 1
@@ -401,29 +363,12 @@ function run_test_data_scripts() {
 
     echo "Running test data setup scripts"
     echo "=========================================================================================="
-    declare -a scripts=("TestData_SCIM2_Add_User.jmx" "TestData_Add_OAuth_Apps.jmx" "TestData_Add_SAML_Apps.jmx")
+    declare -a scripts=("TestData_Thunder_Add_Applications.jmx")
     setup_dir="/home/ubuntu/workspace/jmeter/setup"
 
     for script in "${scripts[@]}"; do
         script_file="$setup_dir/$script"
-        command="jmeter -Jhost=$lb_host -Jport=$is_port -Jusername=$superAdminUsername -Jpassword=$superAdminPassword -JadminUsername=$superAdminUsername -JadminPassword=$superAdminPassword -n -t $script_file"
-        echo "$command"
-        echo ""
-        $command
-        echo ""
-    done
-}
-
-function run_tenant_test_data_scripts() {
-
-    echo "Running tenant test data setup scripts"
-    echo "=========================================================================================="
-    declare -a scripts=( "TestData_Add_Tenants.jmx" "TestData_SCIM2_Add_Tenant_Users.jmx" "TestData_Add_Tenant_OAuth_Apps.jmx" "TestData_Add_Tenant_SAML_Apps.jmx")
-    setup_dir="/home/ubuntu/workspace/jmeter/setup"
-
-    for script in "${scripts[@]}"; do
-        script_file="$setup_dir/$script"
-        command="jmeter -Jhost=$lb_host -Jport=$is_port -Jusername=$superAdminUsername -Jpassword=$superAdminPassword -JnoOfTenants=$noOfTenants -JspCount=$spCount -JuserCount=$userCount -n -t $script_file"
+        command="jmeter -Jhost=$lb_host -Jport=$is_port -n -t $script_file"
         echo "$command"
         echo ""
         $command
@@ -524,8 +469,7 @@ function initiailize_test() {
 
         if [ "$populateTestData" = true ] ; then
           echo 'Populating test data since flag is enabled.'
-          #run_test_data_scripts
-          run_tenant_test_data_scripts
+          run_test_data_scripts
         fi
     fi
 }
@@ -572,7 +516,7 @@ function test_scenarios() {
                 echo "Report location is $report_location"
                 mkdir -p "$report_location"
                 time=$(expr "$test_duration" \* 60)
-                declare -ag jmeter_params=("concurrency=$users" "time=$time" "host=$lb_host" "port=$is_port" "adminUsername=$superAdminUsername" "adminPassword=$superAdminPassword")
+                declare -ag jmeter_params=("concurrency=$users" "time=$time" "host=$lb_host" "port=$is_port")
                 local tenantMode=${scenario[tenantMode]}
                 if [ "$tenantMode" = true ]; then
                       jmeter_params+=" -JtenantMode=true -JnoOfTenants=$noOfTenants -JspCount=$spCount -JuserCount=$userCount"
@@ -601,7 +545,7 @@ function test_scenarios() {
 
                 "$HOME"/workspace/jtl-splitter/jtl-splitter.sh -- -f "$report_location"/results.jtl -t "$warm_up_time" -s
 
-                after_execute_test_scenario
+                # after_execute_test_scenario
 
                 echo ""
                 echo "Zipping JTL files in $report_location"

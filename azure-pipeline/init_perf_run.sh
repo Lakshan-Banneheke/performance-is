@@ -31,7 +31,6 @@ dig +short myip.opendns.com @resolver1.opendns.com
 echo "Build Dir:$BUILD_DIR | Resources_Dir: $RESOURCES_DIR | Workspace: $WORKSPACE"
 cmd=""
 MODE=$RUN_MODE
-DATABASE_TYPE="postgres"
 
 git config --global user.email "$GITHUB_USER_EMAIL"
 git config --global user.name "$GITHUB_USERNAME"
@@ -85,7 +84,7 @@ echo "Starting test..."
 echo "=========================================================="
   
 # Define and execute start-performance command.
-cmd="./start-performance.sh -j $RESOURCES_DIR/apache-jmeter-3.3.tgz -u $DATABASE_USER_NAME -p $DATABASE_PASSWORD -n $DATABASE_HOST_NAME -d $THUNDER_HOST_NAME -t $MODE -- -d 15 -w 2 -u $PERFORMANCE_TEST_USER_NAME -k $PERFORMANCE_TEST_USER_PASSWORD -q $POPULATE_TEST_DATA -f $DATABASE_NAME -b $DATABASE_TYPE -g $SESSION_DATABASE_NAME -x $TENANTS -y $SP_PER_TENANT -z $USERS_PER_TENANT -c $CONCURRENT_USERS"
+cmd="./start-performance.sh -j $RESOURCES_DIR/apache-jmeter-3.3.tgz -u $DATABASE_USER_NAME -p $DATABASE_PASSWORD -n $DATABASE_HOST_NAME -d $THUNDER_HOST_NAME -t $MODE -- -d 15 -w 2 -q $POPULATE_TEST_DATA -x $TENANTS -y $SP_PER_TENANT -z $USERS_PER_TENANT -c $CONCURRENT_USERS"
 
 $cmd
 

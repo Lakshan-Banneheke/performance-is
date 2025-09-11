@@ -32,50 +32,37 @@ bastion_user="ubuntu"
 rds_host=""
 certificate_name=""
 jmeter_setup=""
-is_setup=""
-default_db_username="wso2carbon"
+default_db_username="asgthunder"
 db_username="$default_db_username"
-default_db_password="wso2carbon"
+default_db_password="asgthunder"
 db_password="$default_db_password"
-default_db_storage="100"
-db_storage=$default_db_storage
-default_db_instance_type=db.m4.xlarge
-db_instance_type=$default_db_instance_type
-default_is_instance_type=c5.xlarge
-wso2_is_instance_type="$default_is_instance_type"
 default_bastion_instance_type=c5.xlarge
 bastion_instance_type="$default_bastion_instance_type"
 cloud_host_name=""
 mode=""
 
 results_dir="$PWD/results-$timestamp"
-default_minimum_stack_creation_wait_time=5
-minimum_stack_creation_wait_time="$default_minimum_stack_creation_wait_time"
 
 function usage() {
     echo ""
     echo "Usage: "
     echo "$0  -c <certificate_name> -j <jmeter_setup_path> -n <IS_zip_file_path>"
-    echo "   [-u <db_username>] [-p <db_password>] [-d <db_storage>] [-e <db_instance_type>]"
-    echo "   [-i <wso2_is_instance_type>] [-b <bastion_instance_type>]"
-    echo "   [-w <minimum_stack_creation_wait_time>] [-h]"
+    echo "   [-u <db_username>] [-p <db_password>]"
+    echo "   [-b <bastion_instance_type>]"
+    echo "   [-h]"
     echo ""
-    echo "-k: The Amazon EC2 key file to be used to access the instances."
-    echo "-c: The name of the IAM certificate."
     echo "-j: The path to JMeter setup."
     echo "-n: RDS Hostname. Default: $rds_host."
     echo "-u: The database username. Default: $default_db_username."
     echo "-p: The database password. Default: $default_db_password."
     echo "-d: Cloud Hostname: $cloud_host_name."
     echo "-b: The instance type used for the bastion node. Default: $default_bastion_instance_type."
-    echo "-w: The minimum time to wait in minutes before polling for cloudformation stack's CREATE_COMPLETE status."
-    echo "    Default: $default_minimum_stack_creation_wait_time minutes."
     echo "-t: The required testing mode [FULL/QUICK]"
     echo "-h: Display this help and exit."
     echo ""
 }
 
-while getopts "j:u:p:n:p:i:b:t:d:h" opts; do
+while getopts "j:u:p:n:b:t:d:h" opts; do
     case $opts in
     j)
         jmeter_setup=${OPTARG}
@@ -118,15 +105,6 @@ echo "Run mode: $mode"
 run_performance_tests_options="$@"
 echo $run_performance_tests_options
 
-if [[ -z $db_username ]]; then
-    echo "Please provide the database username."
-    exit 1
-fi
-
-if [[ -z $db_password ]]; then
-    echo "Please provide the database password."
-    exit 1
-fi
 
 if [[ -z $jmeter_setup ]]; then
     echo "Please provide the path to JMeter setup."
@@ -143,7 +121,7 @@ if [[ ! -z $servicePrincipalId ]]; then
 fi
 export bastion_user
 
-run_performance_tests_options+=(" -l $cloud_host_name -n $rds_host -r $db_username -s $db_password -v $mode -o $bastion_user")
+run_performance_tests_options+=(" -l $cloud_host_name -v $mode")
 echo $run_performance_tests_options
 
 # Checking for the availability of commands in jenkins.
@@ -203,8 +181,6 @@ echo "$copy_repo_setup_command"
 $copy_repo_setup_command
 
 copy_jmeter_setup_command="scp -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $jmeter_setup $bastion_user@$bastion_node_ip:/home/$bastion_user/"
-copy_is_pack_command="scp -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $is_setup $bastion_user@$bastion_node_ip:/home/$bastion_user/wso2is.zip"
-copy_connector_command="scp -r -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $results_dir/lib/* $bastion_user@$bastion_node_ip:/home/$bastion_user/"
 
 echo "$copy_jmeter_setup_command"
 $copy_jmeter_setup_command
@@ -259,7 +235,7 @@ cd "$results_dir"
 
 unzip -q results.zip
 wget https://sourceforge.net/projects/gcviewer/files/gcviewer-1.35.jar/download -O gcviewer.jar
-"$results_dir"/jmeter/create-summary-csv.sh -d results -n "WSO2 Identity Server" -p wso2is -c "Heap Size" \
+"$results_dir"/jmeter/create-summary-csv.sh -d results -n "WSO2 Thunder" -p thunder -c "Heap Size" \
     -c "Concurrent Users" -r "([0-9]+[a-zA-Z])_heap" -r "([0-9]+)_users" -i -l -k 2 -g gcviewer.jar
 echo "Creating summary file..."
 ./summary/summary-modifier-pre-provisioned.py

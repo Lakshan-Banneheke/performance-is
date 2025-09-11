@@ -16,7 +16,7 @@
 # under the License.
 #
 # ----------------------------------------------------------------------------
-# Run Ballerina Performance Tests
+# Run Thunder Performance Tests
 # ----------------------------------------------------------------------------
 
 script_dir=$(dirname "$0")
