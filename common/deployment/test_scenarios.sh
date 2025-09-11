@@ -33,7 +33,7 @@ declare -A test_scenario1=(
     [jmx]="oidc/OIDC_AuthCode_Redirect_WithConsent.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL PUBLISH"
+    [modes]="PUBLISH"
 )
 declare -A test_scenario2=(
     [name]="02-oidc_auth_code_redirect_with_consent_retrieve_user_attributes"
@@ -42,7 +42,7 @@ declare -A test_scenario2=(
     [jmx]="oidc/OIDC_AuthCode_Redirect_WithConsent_Retrieve_User_Attributes.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL QUICK"
+    [modes]="QUICK"
 )
 declare -A test_scenario03=(
     [name]="03-oidc_auth_code_redirect_with_consent_retrieve_user_attributes_and_groups"
@@ -51,7 +51,7 @@ declare -A test_scenario03=(
     [jmx]="oidc/OIDC_AuthCode_Redirect_WithConsent_Retrieve_User_Attributes_And_Groups.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL QUICK"
+    [modes]="QUICK"
 )
 declare -A test_scenario04=(
     [name]="04-oidc_auth_code_redirect_with_consent_retrieve_user_attributes_groups_and_roles"
@@ -60,7 +60,7 @@ declare -A test_scenario04=(
     [jmx]="oidc/OIDC_AuthCode_Redirect_WithConsent_Retrieve_User_Attributes_Groups_And_Roles.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL QUICK"
+    [modes]="QUICK"
 )
 declare -A test_scenario05=(
     [name]="05-oidc_auth_code_redirect_without_consent"
@@ -69,7 +69,7 @@ declare -A test_scenario05=(
     [jmx]="oidc/OIDC_AuthCode_Redirect_WithoutConsent.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL PUBLISH"
+    [modes]="PUBLISH"
 )
 declare -A test_scenario06=(
     [name]="06-oidc_auth_code_redirect_without_consent_retrieve_user_attributes"
@@ -78,7 +78,7 @@ declare -A test_scenario06=(
     [jmx]="oidc/OIDC_AuthCode_Redirect_WithoutConsent_Retrieve_User_Attributes.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL PUBLISH"
+    [modes]="PUBLISH"
 )
 declare -A test_scenario07=(
     [name]="07-oidc_auth_code_redirect_without_consent_retrieve_user_attributes_and_groups"
@@ -87,7 +87,7 @@ declare -A test_scenario07=(
     [jmx]="oidc/OIDC_AuthCode_Redirect_WithoutConsent_Retrieve_User_Attributes_And_Groups.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL QUICK"
+    [modes]="QUICK"
 )
 declare -A test_scenario08=(
     [name]="08-oidc_auth_code_redirect_without_consent_retrieve_user_attributes_groups_and_roles"
@@ -96,7 +96,7 @@ declare -A test_scenario08=(
     [jmx]="oidc/OIDC_AuthCode_Redirect_WithoutConsent_Retrieve_User_Attributes_Groups_And_Roles.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL PUBLISH OIDC_AUTH_CODE_REDIRECT_WITHOUT_CONSENT_UA_GROUPS_ROLES_FLOW"
+    [modes]="PUBLISH OIDC_AUTH_CODE_REDIRECT_WITHOUT_CONSENT_UA_GROUPS_ROLES_FLOW"
 )
 declare -A test_scenario09=(
     [name]="09-oidc_password_grant"
@@ -105,7 +105,7 @@ declare -A test_scenario09=(
     [jmx]="oidc/OIDC_Password_Grant.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL PUBLISH"
+    [modes]="PUBLISH"
 )
 declare -A test_scenario10=(
     [name]="10-oidc_password_grant_retrieve_user_attributes"
@@ -114,7 +114,7 @@ declare -A test_scenario10=(
     [jmx]="oidc/OIDC_Password_Grant_Retrieve_User_Attributes.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL QUICK"
+    [modes]="QUICK"
 )
 declare -A test_scenario11=(
     [name]="11-oidc_password_grant_retrieve_user_attributes_and_groups"
@@ -123,7 +123,7 @@ declare -A test_scenario11=(
     [jmx]="oidc/OIDC_Password_Grant_Retrieve_User_Attributes_And_Groups.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL QUICK"
+    [modes]="QUICK"
 )
 declare -A test_scenario12=(
     [name]="12-oidc_password_grant_retrieve_user_attributes_groups_and_roles"
@@ -132,7 +132,7 @@ declare -A test_scenario12=(
     [jmx]="oidc/OIDC_Password_Grant_Retrieve_User_Attributes_Groups_And_Roles.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL QUICK"
+    [modes]="QUICK"
 )
 declare -A test_scenario13=(
     [name]="13-saml2_sso_redirect_binding"
@@ -141,7 +141,7 @@ declare -A test_scenario13=(
     [jmx]="saml/SAML2_SSO_Redirect_Binding.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL PUBLISH"
+    [modes]="PUBLISH"
 )
 declare -A test_scenario14=(
     [name]="14-Token_Exchange_Grant"
@@ -150,7 +150,7 @@ declare -A test_scenario14=(
     [jmx]="oauth/Token_Exchange_Grant.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL PUBLISH"
+    [modes]="PUBLISH"
 )
 declare -A test_scenario15=(
     [name]="15-B2B_oidc_auth_code_redirect_with_consent"
@@ -168,5 +168,5 @@ declare -A test_scenario16=(
     [jmx]="app-native-auth/App_Native_Auth.jmx"
     [tenantMode]=false
     [skip]=false
-    [modes]="FULL PUBLISH"
+    [modes]="PUBLISH"
 )
