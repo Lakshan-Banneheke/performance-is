@@ -678,7 +678,7 @@ Mappings:
       ToPort: '1433'
       DBType: 'sqlserver-se'
     postgres:
-      Version: '14.14'
+      Version: '14.19'
       License: 'postgresql-license'
       ParameterGroup: 'perf-test-param-group-postgres'
       FromPort: '5432'
