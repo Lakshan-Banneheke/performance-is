@@ -220,30 +220,37 @@ fi
 
 declare -ag heap_sizes_array
 if [ ${#heap_sizes[@]} -eq 0 ]; then
-    heap_sizes_array=( "$default_heap_sizes" )
+    heap_sizes_array=( $default_heap_sizes )
 else
-    heap_sizes_array=( "${heap_sizes[@]}" )
+    heap_sizes_array=( ${heap_sizes[@]} )
 fi
 
 declare -ag concurrent_users_array
+echo -n "Concurrent Users: ${concurrent_users[@]}"
+printf "%s " "${concurrent_users[@]}"
+echo
 if [ ${#concurrent_users[@]} -eq 0 ]; then
     if [ "$mode" == "QUICK" ]; then
-        concurrent_users_array=( "$quick_mode_concurrent_users" )
+        concurrent_users_array=( $quick_mode_concurrent_users )
     else
-        concurrent_users_array=( "$default_concurrent_users" )
+        concurrent_users_array=( $default_concurrent_users )
     fi
 else
-    concurrent_users_array=( "${concurrent_users[@]}" )
+    concurrent_users_array=( ${concurrent_users[@]} )
 fi
 
-for heap in "${heap_sizes_array[@]}"; do
+echo -n "Concurrent Users Array: "
+printf "%s " "${concurrent_users_array[@]}"
+echo
+
+for heap in ${heap_sizes_array[@]}; do
     if ! [[ $heap =~ $heap_regex ]]; then
         echo "Please specify a valid heap size for the application."
         exit 1
     fi
 done
 
-for users in "${concurrent_users_array[@]}"; do
+for users in ${concurrent_users_array[@]}; do
     if ! [[ $users =~ $number_regex ]]; then
         echo "Please specify a valid number for concurrent users."
         exit 1

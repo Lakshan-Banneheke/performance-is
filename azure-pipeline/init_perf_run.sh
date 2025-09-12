@@ -53,9 +53,33 @@ rm -rf ~/.ssh/
 mkdir ~/.ssh
 chmod 700 ~/.ssh
 
-wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-3.3.tgz
+wget -P "$RESOURCES_DIR" https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-3.3.tgz
 
-mv apache-jmeter-3.3.tgz $RESOURCES_DIR
+# Install Terraform if not already installed
+install_terraform() {
+  # Check if Terraform is installed
+  if ! command -v terraform &> /dev/null; then
+    echo "Installing Terraform..."
+    # Add HashiCorp GPG key
+    wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
+    
+    # Add HashiCorp repository
+    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list > /dev/null
+    
+    # Update and install Terraform
+    sudo apt-get update && sudo apt-get install -y terraform
+    
+    # Verify installation
+    terraform --version
+    echo "Terraform installed successfully"
+  else
+    echo "Terraform is already installed"
+    terraform --version
+  fi
+}
+
+# Run Terraform installation
+install_terraform
 
 echo "Add Azure SSH extension"
 az extension add --name ssh

@@ -58,7 +58,7 @@ resource "azurerm_network_interface" "performance_testing_nic" {
 
   ip_configuration {
     name                          = "ipconfig1"
-    subnet_id                     = "/subscriptions/{SUBSCRIPTION_ID}/resourceGroups/thunder/providers/Microsoft.Network/virtualNetworks/thunder-vnet/subnets/default"
+    subnet_id                     = "/subscriptions/{SUBSCRIPTION_ID}/resourceGroups/MC_rg-thunder_aks-thunder-eastus2-001_eastus2/providers/Microsoft.Network/virtualNetworks/aks-vnet-35856653/subnets/snet-perf-vm"
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.performance_testing_public_ip.id
   }
@@ -94,8 +94,8 @@ resource "azurerm_linux_virtual_machine" "performance_testing_linux_vm" {
 
   source_image_reference {
     publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "24.04-LTS"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts"
     version   = "latest"
   }
 

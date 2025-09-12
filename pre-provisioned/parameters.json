@@ -1,6 +1,6 @@
 {
     "resourceGroupName": {
-        "value": "thunder"
+        "value": "rg-thunder"
     },
     "location": {
         "value": "eastus2"

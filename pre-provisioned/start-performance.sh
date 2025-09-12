@@ -148,12 +148,10 @@ echo ""
 terraform init
 echo "Terraform Apply.."
 terraform apply -auto-approve
-echo "Getting Bastion Node Private IP..."
-bastion_node_ip=$(terraform output private_ip_address | tr -d '"')
+echo "Getting Bastion Node Public IP..."
+bastion_node_ip=$(terraform output public_ip_address | tr -d '"')
 echo "Bastion Node Private IP: $bastion_node_ip"
 az ssh config --file ~/.ssh/config --ip $bastion_node_ip
-
-
 
 if [[ -z $bastion_node_ip ]]; then
     echo "Bastion node IP could not be found. Exiting..."
