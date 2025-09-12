@@ -39,9 +39,7 @@ echo "$BUILD_TYPE"
 
 echo ""
 echo "Starting performance test with params:"
-echo "    THUNDER_PACK_URL: $THUNDER_PACK_URL"
-echo "    DEPLOYMENT: $DEPLOYMENT"
-echo "    CPU_CORES: $CPU_CORES"
+echo "    CONCURRENT_USERS: $CONCURRENT_USERS"
 echo "    MODE: $MODE"
 echo "    PURPOSE: $BUILD_PURPOSE"
 echo "=========================================================="
@@ -84,7 +82,7 @@ echo "Starting test..."
 echo "=========================================================="
   
 # Define and execute start-performance command.
-cmd="./start-performance.sh -j $RESOURCES_DIR/apache-jmeter-3.3.tgz -u $DATABASE_USER_NAME -p $DATABASE_PASSWORD -n $DATABASE_HOST_NAME -d $THUNDER_HOST_NAME -t $MODE -- -d 15 -w 2 -q $POPULATE_TEST_DATA -x $TENANTS -y $SP_PER_TENANT -z $USERS_PER_TENANT -c $CONCURRENT_USERS"
+cmd="./start-performance.sh -j $RESOURCES_DIR/apache-jmeter-3.3.tgz -n $DATABASE_HOST_NAME -d $THUNDER_HOST_NAME -t $MODE -- -d 15 -w 2 -q $POPULATE_TEST_DATA -c $CONCURRENT_USERS"
 
 $cmd
 
@@ -121,8 +119,6 @@ Build Purpose: $BUILD_PURPOSE
 ------------------------------------------------
 
 Concurrent Users: $CONCURRENT_USERS
-
-Number of Tenants: $TENANTS
 
 Number of SP's per Tenant: $SP_PER_TENANT
 

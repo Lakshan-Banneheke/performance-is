@@ -53,8 +53,6 @@ function usage() {
     echo ""
     echo "-j: The path to JMeter setup."
     echo "-n: RDS Hostname. Default: $rds_host."
-    echo "-u: The database username. Default: $default_db_username."
-    echo "-p: The database password. Default: $default_db_password."
     echo "-d: Cloud Hostname: $cloud_host_name."
     echo "-b: The instance type used for the bastion node. Default: $default_bastion_instance_type."
     echo "-t: The required testing mode [FULL/QUICK]"
@@ -62,16 +60,10 @@ function usage() {
     echo ""
 }
 
-while getopts "j:u:p:n:b:t:d:h" opts; do
+while getopts "j:n:b:t:d:h" opts; do
     case $opts in
     j)
         jmeter_setup=${OPTARG}
-        ;;
-    u)
-        db_username=${OPTARG}
-        ;;
-    p)
-        db_password=${OPTARG}
         ;;
     b)
         bastion_instance_type=${OPTARG}
