@@ -53,47 +53,12 @@ rm -rf ~/.ssh/
 mkdir ~/.ssh
 chmod 700 ~/.ssh
 
-# wget -P "$RESOURCES_DIR" https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-3.3.tgz
-
-# Install Terraform if not already installed
-install_terraform() {
-  # Check if Terraform is installed
-  if ! command -v terraform &> /dev/null; then
-    echo "Installing Terraform..."
-    # Add HashiCorp GPG key
-    wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
-    
-    # Add HashiCorp repository
-    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list > /dev/null
-    
-    # Update and install Terraform
-    sudo apt-get update && sudo apt-get install -y terraform
-    
-    # Verify installation
-    terraform --version
-    echo "Terraform installed successfully"
-  else
-    echo "Terraform is already installed"
-    terraform --version
-  fi
-}
-
-# Run Terraform installation
-install_terraform
+wget -P "$RESOURCES_DIR" https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-3.3.tgz
 
 echo "Add Azure SSH extension"
 az extension add --name ssh
-az version
-az account show
-subscriptionId=$(az account show --query id --output tsv)
 
 cd pre-provisioned
-  
-# Replace specified fields in the terraform file with Azure SP credentials.
-sed -i -e "s/{SUBSCRIPTION_ID}/$subscriptionId/g" bastion-terraform.tf
-sed -i -e "s/{CLIENT_ID}/$servicePrincipalId/g" bastion-terraform.tf
-sed -i -e "s/{CLIENT_SECRET}/$servicePrincipalKey/g" bastion-terraform.tf
-sed -i -e "s/{TENANT_ID}/$tenantId/g" bastion-terraform.tf
 
 # Build and run perf-tests.
 echo ""
@@ -106,15 +71,14 @@ echo "Starting test..."
 echo "=========================================================="
   
 # Define and execute start-performance command.
-cmd="./start-performance.sh -j $RESOURCES_DIR/apache-jmeter-3.3.tgz -n $DATABASE_HOST_NAME -d $THUNDER_HOST_NAME -t $MODE -- -d 15 -w 2 -q $POPULATE_TEST_DATA -c $CONCURRENT_USERS"
+echo "Bastion IP init: $BASTION_NODE_IP"
+cmd="./start-performance.sh -j $RESOURCES_DIR/apache-jmeter-3.3.tgz -b $BASTION_NODE_IP -n $DATABASE_HOST_NAME -d $THUNDER_HOST_NAME -t $MODE -- -d 15 -w 2 -q $POPULATE_TEST_DATA -c $CONCURRENT_USERS"
 
 $cmd
 
 # Copy results directory to build path to be saved as a build artifact.
 cp -r results-* $BUILD_PATH/
 
-echo "terraform destroy"
-terraform destroy -auto-approve
 rm -rf ~/.ssh/
 
 #copy summary csv to new directory and push to github.
