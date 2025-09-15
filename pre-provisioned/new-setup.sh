@@ -14,11 +14,11 @@ wget -P "$HOME" https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-3.
 user="azureuser"
 echo "Executing the Setup Script: VM Username : ${user}"
 cd /home/${user}
-export PATH=~/.local/bin:/usr/bin:$PATH
-curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-curl https://packages.microsoft.com/config/ubuntu/18.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
+
 sudo apt-get update
 sudo apt-get install -y wget apt-transport-https software-properties-common
+
+
 wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb
 sudo dpkg -i packages-microsoft-prod.deb
 sudo apt-get update
@@ -26,6 +26,8 @@ sudo add-apt-repository universe
 wget -q https://github.com/PowerShell/PowerShell/releases/download/v7.1.3/powershell_7.1.3-1.ubuntu.18.04_amd64.deb
 sudo dpkg -i powershell_7.1.3-1.ubuntu.18.04_amd64.deb
 sudo apt-get install -y -f
+
+sudo apt remove --purge openjdk-21-jre-headless
 curl -o jdk-setup.tar.gz https://s3.amazonaws.com/is-performance-test/java-setup/jdk-8u212-linux-x64.tar.gz
 sudo mkdir /usr/lib/jvm
 sudo tar -xvf jdk-setup.tar.gz -C /usr/lib/jvm
@@ -37,9 +39,7 @@ sudo chmod a+x /usr/bin/java
 sudo chmod a+x /usr/bin/javac
 sudo chmod a+x /usr/bin/javaws
 export JAVA_HOME=/usr/lib/jvm/jdk
-sudo su
-echo "export JAVA_HOME=/usr/lib/jvm/jdk" >>/etc/environment
-exit
+sudo sh -c 'echo "export JAVA_HOME=/usr/lib/jvm/jdk" >> /etc/environment'
 source /etc/environment
 
 # echo "Cloning performance repository"

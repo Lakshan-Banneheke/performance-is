@@ -82,6 +82,8 @@ while getopts "j:n:t:d:b:h" opts; do
 done
 shift "$((OPTIND - 1))"
 
+bastion_working_dir="/home/$bastion_user/workingdir"
+
 echo "Installed Python Version:" 
 python --version
 echo "Run mode: $mode"
@@ -132,16 +134,20 @@ temp_dir=$(mktemp -d)
 echo ""
 echo "Copying files to Bastion node..."
 echo "============================================"
-copy_setup_files_command="scp -i ~/.ssh/azure_id_rsa -v -r -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $results_dir/setup $bastion_user@$bastion_node_ip:/home/$bastion_user/"
+echo "Creating the working directory"
+ssh -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com -t  $bastion_user@$bastion_node_ip \
+    "sudo rm -rf $bastion_working_dir && sudo mkdir $bastion_working_dir"
+
+copy_setup_files_command="scp -i ~/.ssh/azure_id_rsa -v -r -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $results_dir/setup $bastion_user@$bastion_node_ip:$bastion_working_dir/"
 copy_repo_setup_command="scp -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com target/is-performance-pre-provisioned-*.tar.gz \
-    $bastion_user@$bastion_node_ip:/home/$bastion_user/"
+    $bastion_user@$bastion_node_ip:$bastion_working_dir/"
 
 echo "$copy_setup_files_command"
 $copy_setup_files_command
 echo "$copy_repo_setup_command"
 $copy_repo_setup_command
 
-# copy_jmeter_setup_command="scp -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $jmeter_setup $bastion_user@$bastion_node_ip:/home/$bastion_user/"
+# copy_jmeter_setup_command="scp -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $jmeter_setup $bastion_user@$bastion_node_ip:$bastion_working_dir/"
 
 # echo "$copy_jmeter_setup_command"
 # $copy_jmeter_setup_command
@@ -150,7 +156,7 @@ echo ""
 echo "Running Bastion Node setup script..."
 echo "============================================"
 setup_bastion_node_command="ssh -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com -t  $bastion_user@$bastion_node_ip \
-    sudo ./setup/setup-bastion.sh -r $rds_host -l $cloud_host_name -u $bastion_user"
+    sudo $bastion_working_dir/setup/setup-bastion.sh -r $rds_host -l $cloud_host_name -u $bastion_user"
 echo "$setup_bastion_node_command"
 # Handle any error and let the script continue.
 $setup_bastion_node_command || echo "Remote ssh command failed."
@@ -159,7 +165,7 @@ $setup_bastion_node_command || echo "Remote ssh command failed."
 echo ""
 echo "Running performance tests..."
 echo "============================================"
-scp -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com run-performance-tests.sh $bastion_user@$bastion_node_ip:/home/$bastion_user/workspace/jmeter
+scp -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com run-performance-tests.sh $bastion_user@$bastion_node_ip:$bastion_working_dir/workspace/jmeter
 echo "Run Type: $mode"
 
 run_performance_tests_command="./workspace/jmeter/run-performance-tests.sh -p 443 ${run_performance_tests_options[@]}"
@@ -172,7 +178,7 @@ echo ""
 echo "Downloading results..."
 echo "============================================"
 echo "============================================"
-download="scp -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $bastion_user@$bastion_node_ip:/home/$bastion_user/results.zip $results_dir/"
+download="scp -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $bastion_user@$bastion_node_ip:$bastion_working_dir/results.zip $results_dir/"
 echo "$download"
 $download || echo "Remote download failed"
 
