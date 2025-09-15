@@ -89,12 +89,6 @@ echo "Run mode: $mode"
 run_performance_tests_options="$@"
 echo $run_performance_tests_options
 
-
-if [[ -z $jmeter_setup ]]; then
-    echo "Please provide the path to JMeter setup."
-    exit 1
-fi
-
 # if [[ ! -z $servicePrincipalId ]]; then
 #     bastion_user=$servicePrincipalId
 # fi
@@ -147,10 +141,10 @@ $copy_setup_files_command
 echo "$copy_repo_setup_command"
 $copy_repo_setup_command
 
-copy_jmeter_setup_command="scp -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $jmeter_setup $bastion_user@$bastion_node_ip:/home/$bastion_user/"
+# copy_jmeter_setup_command="scp -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $jmeter_setup $bastion_user@$bastion_node_ip:/home/$bastion_user/"
 
-echo "$copy_jmeter_setup_command"
-$copy_jmeter_setup_command
+# echo "$copy_jmeter_setup_command"
+# $copy_jmeter_setup_command
 
 echo ""
 echo "Running Bastion Node setup script..."

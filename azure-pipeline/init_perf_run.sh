@@ -53,7 +53,7 @@ rm -rf ~/.ssh/
 mkdir ~/.ssh
 chmod 700 ~/.ssh
 
-wget -P "$RESOURCES_DIR" https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-3.3.tgz
+# wget -P "$RESOURCES_DIR" https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-3.3.tgz
 
 echo "Add Azure SSH extension"
 az extension add --name ssh

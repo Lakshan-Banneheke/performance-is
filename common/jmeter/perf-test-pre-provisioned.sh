@@ -462,11 +462,11 @@ function initiailize_test() {
         fi
 
         if [[ -d results ]]; then
-            echo "Results directory already exists. Please backup."
+            echo "[ERROR]: Results directory already exists. Please backup."
             exit 1
         fi
         if [[ -f results.zip ]]; then
-            echo "The results.zip file already exists. Please backup."
+            echo "[ERROR]: The results.zip file already exists. Please backup."
             exit 1
         fi
 
