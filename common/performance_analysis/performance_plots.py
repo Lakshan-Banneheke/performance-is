@@ -30,22 +30,6 @@ deployment_types = {
     'Single Node 4 Core': {
         'csv_file': 'single_node_4_core.csv',
         'color': 'royalblue'
-    },
-    'Two Node 2 Core': {
-        'csv_file': 'two_node_2_core.csv',
-        'color': 'darkcyan'
-    },
-    'Two Node 4 Core': {
-        'csv_file': 'two_node_4_core.csv',
-        'color': 'orange'
-    },
-    'Three Node 4 Core': {
-        'csv_file': 'three_node_4_core.csv',
-        'color': 'rosybrown'
-    },
-    'Four Node 4 Core': {
-        'csv_file': 'four_node_4_core.csv',
-        'color': 'purple'
     }
 }
 

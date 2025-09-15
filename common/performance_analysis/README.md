@@ -16,11 +16,7 @@ This script generates performance plots based on CSV data files for different de
    2. Define the deployment types and their respective CSV files. If a CSV file is not present, it'll ignore it and continue with the rest of the CSVs.
     ```shell
     deployment_types = {
-    'Single Node 4 Core': 'single_node_4_core.csv',
-    'Two Node 2 Core': 'two_node_2_core.csv',
-    'Two Node 4 Core': 'two_node_4_core.csv',
-    'Three Node 4 Core': 'three_node_4_core.csv',
-    'Four Node 4 Core': 'four_node_4_core.csv',
+    'Single Node 4 Core': 'single_node_4_core.csv'
     }
    ```
 
@@ -65,10 +61,6 @@ After downloading or cloning the performance_analysis folder, the directory stru
    performance_analysis
     ├── performance_plots.py
     ├── single_node_4_core.csv
-    ├── two_node_2_core.csv
-    ├── two_node_4_core.csv
-    ├── three_node_4_core.csv
-    ├── four_node_4_core.csv
     └── output
           └── [scenario_folders_with_plots]
    ```
