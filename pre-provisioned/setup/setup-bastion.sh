@@ -73,10 +73,17 @@ function get_ssh_hostname() {
     sudo -u $bastion_user ssh -G "$1" | awk '/^hostname / { print $2 }'
 }
 
+function cleanup() {
+    sudo rm -rf common/ gcviewer.jar jmeter/ payloads/ results/ setup/ workspace/ 
+    sudo rm temp.pem results.zip
+}
+
 echo ""
 echo "Setting up required files..."
 echo "============================================"
 cd /home/$bastion_user || exit 0
+
+cleanup
 mkdir workspace
 cd workspace || exit 0
 

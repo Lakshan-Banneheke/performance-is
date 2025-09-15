@@ -200,7 +200,7 @@ echo "Creating summary file..."
 ./summary/summary-modifier-pre-provisioned.py
 
 
-rm -rf cf-test-metadata.json cloudformation/ common/ gcviewer.jar is/ jmeter/ jtl-splitter/ netty-service/ payloads/ results/ sar/ setup/
+rm -rf cf-test-metadata.json cloudformation/ common/ gcviewer.jar is/ jmeter/ jtl-splitter/ netty-service/ payloads/ results/ sar/ setup/ workspace/
 
 echo ""
 echo "Done."
