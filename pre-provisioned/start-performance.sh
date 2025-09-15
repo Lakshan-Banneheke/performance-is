@@ -82,7 +82,7 @@ while getopts "j:n:t:d:b:h" opts; do
 done
 shift "$((OPTIND - 1))"
 
-bastion_working_dir="/home/$bastion_user/workingdir"
+bastion_working_dir="/home/$bastion_user"
 
 echo "Installed Python Version:" 
 python --version
@@ -134,9 +134,9 @@ temp_dir=$(mktemp -d)
 echo ""
 echo "Copying files to Bastion node..."
 echo "============================================"
-echo "Creating the working directory"
-ssh -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com -t  $bastion_user@$bastion_node_ip \
-    "sudo rm -rf $bastion_working_dir && sudo mkdir $bastion_working_dir"
+# echo "Creating the working directory"
+# ssh -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com -t  $bastion_user@$bastion_node_ip \
+#     "sudo rm -rf $bastion_working_dir && sudo mkdir $bastion_working_dir"
 
 copy_setup_files_command="scp -i ~/.ssh/azure_id_rsa -v -r -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com $results_dir/setup $bastion_user@$bastion_node_ip:$bastion_working_dir/"
 copy_repo_setup_command="scp -i ~/.ssh/azure_id_rsa -o StrictHostKeyChecking=no -o HostKeyAlgorithms=ecdsa-sha2-nistp256,ssh-rsa,ssh-dss -o PubkeyAcceptedKeyTypes=+ssh-rsa-cert-v01@openssh.com target/is-performance-pre-provisioned-*.tar.gz \
