@@ -183,8 +183,6 @@ while getopts "c:m:d:w:j:i:e:x:y:z:t:p:l:q:v:h" opts; do
     esac
 done
 
-bastion_working_dir=/home/$bastion_user/workingdir
-
 # Validate options
 number_regex='^[0-9]+$'
 heap_regex='^[0-9]+[MG]$'
@@ -462,18 +460,18 @@ function initiailize_test() {
             echo "WARNING: Could not find JMeter directory."
         fi
 
-        if [[ -d $bastion_working_dir/results ]]; then
+        if [[ -d results ]]; then
             echo "[ERROR]: Results directory already exists. Please backup."
             exit 1
         fi
-        if [[ -f $bastion_working_dir/results.zip ]]; then
+        if [[ -f results.zip ]]; then
             echo "[ERROR]: The results.zip file already exists. Please backup."
             exit 1
         fi
 
-        mkdir $bastion_working_dir/results
-        cp "$0" $bastion_working_dir/results
-        mv test-metadata.json $bastion_working_dir/results/
+        mkdir results
+        cp "$0" results
+        mv test-metadata.json results/
 
         if [ "$populateTestData" = true ] ; then
           echo 'Populating test data since flag is enabled.'
@@ -484,11 +482,10 @@ function initiailize_test() {
 
 function exit_handler() {
 
-    if [[ "$estimate" == false ]] && [[ -d $bastion_working_dir/results ]]; then
+    if [[ "$estimate" == false ]] && [[ -d results ]]; then
         echo "Zipping results directory..."
-        zip -9qr $bastion_working_dir/results.zip $bastion_working_dir/results/
+        zip -9qr results.zip results/
     fi
-    sudo rm -rf "$bastion_working_dir"
     print_durations
 }
 

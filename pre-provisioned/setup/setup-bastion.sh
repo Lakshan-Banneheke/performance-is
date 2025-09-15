@@ -76,32 +76,30 @@ function get_ssh_hostname() {
 echo ""
 echo "Setting up required files..."
 echo "============================================"
-bastion_working_dir="/home/$bastion_user/workingdir"
-
-cd $bastion_working_dir || exit 0
+cd /home/$bastion_user || exit 0
 mkdir workspace
 cd workspace || exit 0
 
 echo ""
 echo "Extracting cloud performance distribution..."
 echo "============================================"
-tar -C $bastion_working_dir/workspace -xzf $bastion_working_dir/is-performance-pre-provisioned-*.tar.gz
+tar -C /home/$bastion_user/workspace -xzf /home/$bastion_user/is-performance-pre-provisioned-*.tar.gz
 
 echo ""
 echo "Running JMeter setup script..."
 echo "============================================"
-cd $bastion_working_dir || exit 0
+cd /home/$bastion_user || exit 0
 # Creates a temporary empty key
 touch temp.pem
 workspace/setup/setup-jmeter-client-is.sh -g -k ./temp.pem \
-            -i $bastion_working_dir \
-            -c $bastion_working_dir \
-            -f apache-jmeter-*.tgz \
+            -i /home/$bastion_user \
+            -c /home/$bastion_user \
+            -f /home/$bastion_user/apache-jmeter-*.tgz \
             -a $lb_alias -n "$lb_host"\
             -a rds -n "$rds_host"
-sudo chown -R $bastion_user:$bastion_user $bastion_working_dir/workspace
-sudo chown -R $bastion_user:$bastion_user $bastion_working_dir/apache-jmeter-*
-sudo chown -R $bastion_user:$bastion_user $bastion_working_dir/tmp/jmeter.log
-sudo chown -R $bastion_user:$bastion_user $bastion_working_dir/jmeter.log
+sudo chown -R $bastion_user:$bastion_user workspace
+sudo chown -R $bastion_user:$bastion_user apache-jmeter-*
+sudo chown -R $bastion_user:$bastion_user /tmp/jmeter.log
+sudo chown -R $bastion_user:$bastion_user jmeter.log
 echo "setup-bastion:104:"
 ls /tmp/
