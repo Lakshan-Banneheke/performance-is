@@ -109,7 +109,7 @@ function usage() {
     echo "   [-j <jmeter_client_heap_size>] [-i <include_scenario_name>] [-e <exclude_scenario_name>]"
     echo "   [-t] [-p <is_port>] [-h]"
     echo ""
-    echo "-c: Concurrency levels to test. You can give multiple options to specify multiple levels. Default \"$default_concurrent_users\"."
+    echo "-r: Concurrency levels to test. You can give multiple options to specify multiple levels. Default \"$default_concurrent_users\"."
     echo "-m: Application heap memory sizes. You can give multiple options to specify multiple heap memory sizes. Default \"$default_heap_sizes\"."
     echo "-d: Test Duration in minutes. Default $default_test_duration m."
     echo "-w: Warm-up time in minutes. Default $default_warm_up_time m."
@@ -125,7 +125,7 @@ function usage() {
     echo ""
 }
 
-while getopts "c:m:d:w:j:i:e:x:y:z:t:p:l:q:v:h" opts; do
+while getopts "c:m:d:w:r:j:i:e:x:y:z:t:p:l:q:v:h" opts; do
     case $opts in
     c)
         concurrent_users+=("${OPTARG}")
@@ -138,6 +138,9 @@ while getopts "c:m:d:w:j:i:e:x:y:z:t:p:l:q:v:h" opts; do
         ;;
     w)
         warm_up_time=${OPTARG}
+        ;;
+    r)
+        concurrency=${OPTARG}
         ;;
     j)
         jmeter_client_heap_size=${OPTARG}
@@ -187,6 +190,30 @@ done
 number_regex='^[0-9]+$'
 heap_regex='^[0-9]+[MG]$'
 
+# Check concurrency level
+if [ "$concurrency" == "50-500" ]; then
+    echo "Running tests for concurrency level 50-500"
+    default_concurrent_users="50 100 150 300 500"
+elif [ "$concurrency" == "500-3000" ]; then
+    echo "Running tests for concurrency level 500-3000"
+    default_concurrent_users="500 750 1000 1500 2000 2500 3000"
+elif [ "$concurrency" == "1000-3000" ]; then
+    echo "Running tests for concurrency level 1000-3000"
+    default_concurrent_users="1000 1500 2000 2500 3000"
+elif [ "$concurrency" == "50-50" ]; then
+    echo "Running tests for concurrency level 50"
+    default_concurrent_users="50"
+elif [ "$concurrency" == "50-1000" ]; then
+    echo "Running tests for concurrency level 50-1000"
+    default_concurrent_users="50 100 150 300 500 750 1000"
+elif [ "$concurrency" == "50-3000" ]; then
+    echo "Running tests for concurrency level 50-3000"
+    default_concurrent_users="50 100 150 300 500 750 1000 1500 2000 2500 3000"
+else
+    echo "Running tests for concurrency level 50-3000"
+    default_concurrent_users="50 100 150 300 500 750 1000 1500 2000 2500 3000"
+fi
+
 if [[ -z $test_duration ]]; then
     echo "Please provide the test duration."
     exit 1
@@ -229,11 +256,7 @@ echo -n "Concurrent Users: ${concurrent_users[@]}"
 printf "%s " "${concurrent_users[@]}"
 echo
 if [ ${#concurrent_users[@]} -eq 0 ]; then
-    if [ "$mode" == "QUICK" ]; then
-        concurrent_users_array=( $quick_mode_concurrent_users )
-    else
-        concurrent_users_array=( $default_concurrent_users )
-    fi
+    concurrent_users_array=( $default_concurrent_users )
 else
     concurrent_users_array=( ${concurrent_users[@]} )
 fi
