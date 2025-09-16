@@ -94,14 +94,7 @@ echo $run_performance_tests_options
 # fi
 # export bastion_user
 
-echo "Bastion IP: $bastion_node_ip"
-echo "Downloading VM key"
-az keyvault secret download \
-  --vault-name kv-thunder-perf-eus2-01 \
-  --name vm-thunder-perf-key \
-  --file ~/.ssh/azure_id_rsa
-
-chmod 400 ~/.ssh/azure_id_rsa
+echo "Bastion IP address: $bastion_node_ip"
 
 run_performance_tests_options+=(" -l $cloud_host_name -v $mode")
 echo $run_performance_tests_options

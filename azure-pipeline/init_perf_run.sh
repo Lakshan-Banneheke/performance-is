@@ -32,9 +32,6 @@ echo "Build Dir:$BUILD_DIR | Resources_Dir: $RESOURCES_DIR | Workspace: $WORKSPA
 cmd=""
 MODE=$RUN_MODE
 
-git config --global user.email "$GITHUB_USER_EMAIL"
-git config --global user.name "$GITHUB_USERNAME"
-
 echo "$BUILD_TYPE"
 
 echo ""
@@ -49,14 +46,7 @@ curl -s -i https://thunder.local/health/liveness | head -1
 echo "Changing Directory to Thunder Product Repository | Branch: $BRANCH"
 cd $WORKSPACE
 
-rm -rf ~/.ssh/
-mkdir ~/.ssh
-chmod 700 ~/.ssh
-
 # wget -P "$RESOURCES_DIR" https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-3.3.tgz
-
-echo "Add Azure SSH extension"
-az extension add --name ssh
 
 cd pre-provisioned
 
