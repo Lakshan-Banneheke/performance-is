@@ -62,7 +62,7 @@ echo "=========================================================="
   
 # Define and execute start-performance command.
 echo "Bastion IP init: $BASTION_NODE_IP"
-cmd="./start-performance.sh -j $RESOURCES_DIR/apache-jmeter-3.3.tgz -b $BASTION_NODE_IP -n $DATABASE_HOST_NAME -d $THUNDER_HOST_NAME -t $MODE -- -d 15 -w 2 -q $POPULATE_TEST_DATA -r $CONCURRENCY"
+cmd="./start-performance.sh -j $RESOURCES_DIR/apache-jmeter-3.3.tgz -b $BASTION_NODE_IP -n $DATABASE_HOST_NAME -d $THUNDER_HOST_NAME -t $MODE -- -d 15 -w 2 -q $POPULATE_TEST_DATA -c $CONCURRENCY"
 
 $cmd
 
